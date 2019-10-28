@@ -91,10 +91,130 @@ Arroyo quemado looks normal. Carp looks like there's a few higher than expected 
 
 These are pretty normal across all groups!
 
+But let's explore this data a bit more...like by date!
 
 
+Use "lubridate" to parse date and times:
+Always use lubridate:: because lubridate functions are redundant
 
+Let's add a new column with 'mutate()' that contains a date with an actual date
+```{r}
 
+# Let's get R to recognize dates as a date.
+# Date currently stored as month / day / year (mdy). Remember this!
+
+lobster_date <-  lobster_tidy %>% 
+  mutate(
+    date_new = lubridate::mdy(date)
+  )
+
+# Both date format and variable class have changed.
+```
+
+Can we group this by months? Sure can!
+
+Parse "date_new" column to get different pieces separated.
+label = TRUE gives you month abbreviation
+
+```{r}
+lobster_parse_date <- lobster_date %>%
+  mutate (
+    obs_month = lubridate::month(date_new, label = TRUE)
+  ) %>% 
+  mutate (
+    obs_year = lubridate::year(date_new)
+  )
+
+```
+
+Nice!
+
+Let's ask a few question about counts of lobsters. 
+
+Count lobsters by different groupings...using dplyr::count!
+
+Count calls on things using group_by, then counts those things in those groups.
+
+Let's say I want to count the number of lobsters by year and month.
+
+```{r}
+
+lobster_ym <- lobster_parse_date %>%
+  count(obs_year, obs_month)
+
+lobster_ym
+
+# What about counting for each site?
+
+lobster_ysite <- lobster_parse_date %>% 
+  count(obs_year, site)
+
+lobster_ysite
+
+# What about counting just for site?
+
+lobster_site <- lobster_parse_date %>% 
+  count(site)
+
+lobster_site
+```
+
+This is super important when considering sample sizes.
+
+How do we find numbers of observations in a summary table?
+use group_by + summarize + n()
+
+```{r}
+lobster_summary <- lobster_parse_date %>%
+  group_by (site) %>%
+  summarize(
+    mean_size = mean(size_mm, na.rm = TRUE),
+    sd_size = sd(size_mm, na.rm = TRUE),
+    sample_n = n()
+  )
+
+```
+
+Count basically is better than tally. Don't listen to tally people. 
+
+Let's start looking at some confidence intervals and t-tests.
+
+T distribution accounts for increased uncertainty with small sample sizes and population uncertainty.
+
+Use the "t.test()" function to find confidence intervals and perform t-tests
+pull() stores values as a vector. Useful for some base r functions.
+
+```{r}
+# Let's find CI for lobster sizes at IV beach
+
+ivee_lobsters <- lobster_tidy %>%
+  filter(site == "IVEE") %>% 
+  pull(size_mm)
+
+t.test(ivee_lobsters)
+
+```
+
+Okay, but let's see if theres a significant difference in size between lobsters measured at naples and mowhawk reef
+
+First, the tedious way...
+
+```{r}
+# Don't put just single means in! You need entire sample.
+
+napl_sample <- lobster_tidy %>% 
+  filter(site == "NAPL") %>% 
+  pull(size_mm)
+
+mohk_sample <- lobster_tidy %>% 
+  filter(site == "MOHK") %>% 
+  pull(size_mm)
+  
+mohk_napl_ttest <- t.test(mohk_sample, napl_sample)
+
+mohk_napl_ttest
+
+```
 
 
 
