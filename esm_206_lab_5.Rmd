@@ -216,5 +216,38 @@ mohk_napl_ttest
 
 ```
 
+What does this mean? There is a 2.2 e -16 chance that if I took two random samples from a population with the same mean that I would get means this different. So, actually, what's more likely is that the two sample populations were initially different.
 
+
+Inline variable referencing: 
+
+Let's make a statement about the t-test.
+
+Mean lobster size differed significantly between Mohawk and Naples reefs (df(`r mohk_napl_ttest$parameter`), t = `r mohk_napl_ttest$statistic`)
+
+But there's an easier way!!
+
+```{r}
+# Create df with two groups you want to compare
+
+lobster_2 <- lobster_tidy %>% 
+  filter(site == c("NAPL", "MOHK"))
+
+ttest_2 <- t.test(size_mm ~ site, data = lobster_2)
+
+ttest_2
+
+
+```
+
+Now, let's make a geom_tile heatmap:
+Using lobster_ysite
+
+
+
+```{r}
+
+ggplot(data = lobster_ysite, aes(x = obs_year, y = site)) +
+  geom_tile(aes(fill = n))
+```
 
