@@ -9,3 +9,92 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Objectives:
+
+- Getting counts for different groups
+- Use {lubridate} to parse dates
+- Find confidence intervals and do t-tests with t.test()
+- Heatmap with geom_tile
+
+```{r, include = FALSE}
+# Attach packages
+
+library(tidyverse)
+library(here)
+library(janitor)
+
+```
+
+
+```{r}
+# Import lobster data
+
+lobster_abundance <- read_csv(here::here("data", "lobster_abundance.csv"),
+                              na = "-99999") %>% 
+  clean_names()
+
+```
+
+Our data isn't in tidy format. Each lobster should have an individual row. The data is currently presented in a frequency table!
+
+Let's expand this using the tidyr::uncount function for lobster counts.
+This function drops NAs! Careful.
+
+```{r}
+
+lobster_tidy <- lobster_abundance %>%
+  uncount(lobster_count)
+```
+
+Yay! Now each lobster has its own row. This is tidy format!
+
+Let's explore our data a bit:
+
+```{r}
+
+ggplot(data = lobster_tidy, aes(x = site, y = size_mm)) +
+  geom_jitter(aes(color = site),
+              width = 0.2)
+
+## This isn't super informative. Looks like they have similar central tendency, different spread. 
+## Carp and IV look like they have outliers, maybe interesting.
+
+ggplot(data = lobster_tidy, aes(x = site, y = size_mm)) +
+  geom_violin(aes(color = site))
+
+# Violin plots are still hard to figure out skew, normality...
+
+ggplot(data = lobster_tidy, aes(x = size_mm)) +
+  geom_histogram(aes(fill = site)) +
+  facet_wrap(~site, scales = "free")
+
+# scales = "free" changes individual scales for facets. Fine when looking at skew for sites.
+
+# Histograms give us a good overview of skew.
+
+```
+
+These look relatively symmetrical, bell shaped, with one mode. 
+Let's look at a quantile-quantile plot, where bin width exerts no influence on our data...
+
+```{r}
+# QQ plot with counts for each site...
+# Need to specify what your sample mean is.
+
+ggplot(data = lobster_tidy, aes(sample = size_mm)) +
+  geom_qq(size = 0.5) +
+  facet_wrap(~site, scales = "free")
+
+```
+
+Arroyo quemado looks normal. Carp looks like there's a few higher than expected outliers, same with IV. Mohawke also looks fairly normal. It's likely the histogram skewed the data with bin width. Naples looks very normal.
+
+These are pretty normal across all groups!
+
+
+
+
+
+
+
+
